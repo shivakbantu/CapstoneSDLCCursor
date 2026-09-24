@@ -30,7 +30,7 @@ None. Verify Go was human-approved.
 
 ## PR
 
-pending
+https://github.com/shivakbantu/CapstoneSDLCCursor/pull/8
 
 ## Ready for Human Approval
 
