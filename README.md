@@ -58,16 +58,27 @@ Dummy payment uses a brief ~400 ms loading simulation (not a real gateway).
 ## Tests
 
 ```bash
-pytest
+# Route smoke only
+pytest tests/test_routes.py -q
+
+# Playwright E2E (Flask must be running on :5000)
+pip install -r requirements.txt
+playwright install chromium
+# terminal 1: flask --app wsgi:app run --port 5000
+# terminal 2:
+set PLAYWRIGHT_BASE_URL=http://127.0.0.1:5000
+pytest tests/e2e/test_booking_e2e.py -q
 ```
 
-Smoke tests assert the app factory and GET routes return HTTP 200 (including unknown hotel ids, which render an in-page not-found UI).
+Optional JS twin: `npm i` then `npx playwright test` (see `tests/e2e/booking.spec.js`).
+
+Smoke tests assert the app factory and GET routes return HTTP 200 (including unknown hotel ids, which render an in-page not-found UI). E2E covers browse → book → confirm plus empty filter, unknown hotel, cold confirmation, and guest validation.
 
 ## Stage 7 prep (Playwright)
 
 Happy path (single tab): Results → filter + sort → open details → Select room → C Continue → D valid guest → E Pay/Confirm → F summary + `HB-` reference + confetti.
 
-Prefer `data-testid` selectors (see `impl-plan.md` naming table).
+Prefer `data-testid` selectors (see `impl-plan.md` naming table). Scripts live under `tests/e2e/`.
 
 ## Security
 
