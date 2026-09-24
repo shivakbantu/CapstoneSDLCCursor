@@ -13,10 +13,10 @@ Guests progress through: **Results (A)** → **Hotel Details (B)** → **Room Se
 | Flask + Jinja2 Python web app serves pages & static assets | Thin server: routing + template render + `static/` only |
 | No DB, auth, real payments, or live hotel APIs | No ORM, sessions for login, or payment SDKs; mock data in JS |
 | ≥12 hotels × 3 rooms in mock JSON | Single client-side catalog module; schema supports filters/details/booking |
-| Filters: price, rating, amenities; sort by price; Clear filters | Client-side filter/sort engine on Results (A) |
-| 3-step booking with step indicator | Shared booking shell for C/D/E; client state between steps |
+| Filters: price, rating, amenities; sort by price; Clear filters | Client-side filter/sort engine on Results (A); sort **low→high and high→low** |
+| 3-step booking with step indicator | Shared booking shell for C/D/E; booking draft in **`sessionStorage`** |
 | Visual feedback on every primary action | Shared UI feedback component (toast/modal/animation) |
-| Confirmation + confetti; optional reference id | Confirmation page + lightweight confetti/animation asset |
+| Confirmation + confetti; optional reference id | Confirmation page + **small vanilla JS confetti helper**; reference id `HB-` + timestamp/random |
 | Responsive desktop / tablet / mobile | Responsive CSS in app shell; semantic HTML |
 | ≤200ms local interactions | Sync filter/sort/step transitions; no network round-trips for catalog ops |
 | Graceful empty / validation / `"Not Found"` | Defensive render helpers; empty-state UI; inline form errors |
@@ -67,11 +67,11 @@ sequenceDiagram
   Guest->>Flask: GET /hotels/{id} (Details B)
   Flask-->>Guest: Details template
   Guest->>Flask: GET /book/... (Steps C→D→E)
-  Note over Page: Client holds room + guest state
+  Note over Page: sessionStorage holds BookingDraft
   Guest->>Page: Pay / Confirm (simulation)
   Page->>FB: Loading then confetti
   Guest->>Flask: GET /confirmation (F)
-  Flask-->>Guest: Confirmation + summary
+  Flask-->>Guest: Confirmation shell; JS reads draft + confetti
 ```
 
 ## Components & Responsibilities
@@ -82,14 +82,14 @@ sequenceDiagram
 | **Route handlers** | Map URLs to screens A–F; pass minimal template context (page title, hotel id for details); no business persistence |
 | **Jinja2 templates (app shell)** | Shared layout: nav, responsive breakpoints, feedback region hooks, links across screens (EP-3) |
 | **Results page (A)** | Hotel cards from mock data; wire filter/sort UI; empty state; navigate to details |
-| **Hotel details page (B)** | Hotel info + 3 room types; “Select room” entry into booking flow |
-| **Booking step pages (C/D/E)** | Step indicator (1 of 3); Room Selection → Guest Details → Dummy Payment; Back preserves selections |
+| **Hotel details page (B)** | Hotel info + 3 room types; “Select room” seeds draft and enters booking at C (room may be changed on C) |
+| **Booking step pages (C/D/E)** | Step indicator (1 of 3); Room Selection → Guest Details → Dummy Payment; Back/Continue use `sessionStorage` draft |
 | **Confirmation page (F)** | Booking summary, confetti, CTA back to results |
 | **Mock catalog module (JS)** | Hardcoded ≥12 hotels × 3 rooms; fields for name, location, rating, amenities, prices, images/placeholders, room capacity/amenities |
-| **Filter & sort engine (JS)** | Price range, rating, amenities multi-select, Clear filters; sort by price (low→high; optional high→low) |
-| **Booking state manager (JS)** | Hold selected hotel/room, guest form fields, optional reference id across C→F without server session |
+| **Filter & sort engine (JS)** | Price range, rating, amenities multi-select, Clear filters; sort by price **low→high and high→low** (sort key: hotel `priceRange.min` / equivalent display min) |
+| **Booking state manager (JS)** | Persist `BookingDraft` in **`sessionStorage`** across C→F (same tab); survive refresh; clear when tab closes; no server session |
 | **Form validation (JS)** | Inline validation for Guest Details (required names, email format, guests ≥ 1; optional phone) |
-| **UI feedback layer (JS/CSS)** | Toasts, modals, animations for primary actions; payment loading; confetti on success (EP-13, EP-12) |
+| **UI feedback layer (JS/CSS)** | Toasts, modals, animations for primary actions; payment loading; **small vanilla JS confetti helper** on success (no heavy dependency) |
 | **Display helpers (JS)** | Render missing mock fields as `"Not Found"` / placeholder; never crash |
 | **Static CSS** | Responsive layout, card/list/booking/confirmation presentation |
 | **Playwright E2E (Stage 7)** | Drive browse → filter/sort → details → 3-step book → confirm against live Flask server |
@@ -100,10 +100,10 @@ sequenceDiagram
 
 1. **Page load:** Guest requests a route → Flask returns Jinja2 HTML → browser loads CSS/JS (including mock catalog).
 2. **Browse (A):** Client reads mock JSON → renders cards → guest applies filters/sort → engine recomputes in memory → UI updates with visual feedback (target ≤200ms). Empty matches → empty-state view.
-3. **Details (B):** Navigation with hotel id (path or query) → template loads → JS resolves hotel from mock → shows hotel + 3 rooms; missing fields → `"Not Found"`.
-4. **Booking (C→E):** Selecting a room seeds client booking state → Guest Details validates locally → Dummy Payment runs success-only simulation (loading feedback, no network payment call) → optional client-generated reference id.
-5. **Confirmation (F):** Page shows summary from client state (or query/hash if needed for refresh resilience within mock scope) → confetti → CTA returns to Results.
-6. **No server write path:** Flask never persists bookings, users, or payments; all catalog and booking draft data remain client-side for this capstone.
+3. **Details (B):** Navigation with hotel id (path) → template loads → JS resolves hotel from mock → shows hotel + 3 rooms; missing fields → `"Not Found"`. “Select room” navigates to booking step C with `hotelId` + optional pre-selected `roomId` written to `sessionStorage`.
+4. **Booking (C→E):** Step C requires exactly one room (pre-selected from B or chosen on C) before Continue; draft is read/written via **`sessionStorage`**. Guest Details validates locally; Dummy Payment runs success-only simulation (loading feedback, no network payment call) → client generates **`referenceId`** (`HB-` + timestamp/random) before advancing to F.
+5. **Confirmation (F):** Page reads summary from `sessionStorage` draft → confetti (vanilla helper) → CTA clears draft (optional) and returns to Results. Same-tab refresh mid-flow restores draft from `sessionStorage`.
+6. **No server write path:** Flask never persists bookings, users, or payments; catalog stays in mock JS; booking draft is browser-tab scoped only.
 
 ## Technology Choices (with rationale)
 
@@ -115,10 +115,11 @@ sequenceDiagram
 | **Why not FastAPI** | Rejected for primary UI | Excellent for APIs; this product is multi-page HTML with Jinja2, not a JSON API + SPA |
 | **Why not Django** | Rejected | Heavier (admin, ORM, auth patterns) unused given no DB/auth |
 | **Client data** | Hardcoded JS mock JSON | Matches EP-4 and “no persistent backend”; enables ≤200ms local filter/sort |
-| **Client interactivity** | Vanilla JS (or minimal helpers) | Sufficient for filter/sort/forms/feedback; avoid SPA framework unless Design Review later approves |
+| **Client interactivity** | **Vanilla JS** | Sufficient for filter/sort/forms/feedback; no SPA framework |
 | **Styling** | Static CSS (responsive) | Meet breakpoints without requiring a heavy design system |
-| **Animations** | CSS + lightweight JS confetti | Satisfies EP-12/EP-13 without payment or analytics SDKs |
-| **Persistence** | None | Out of scope; booking state in `sessionStorage`/`localStorage` or in-memory JS is an implementation detail for Back/Continue UX only—not a server DB |
+| **Animations** | CSS transitions + **small vanilla JS confetti helper** (no npm confetti package) | Satisfies EP-12/EP-13; keeps deps minimal for Stage 5/7 |
+| **Booking draft persistence** | **`sessionStorage`** (not `localStorage`, not server) | Survives refresh within the same tab for Back/Continue and demo/Playwright; clears when the tab closes; not a DB |
+| **Server persistence** | None | Out of scope — no DB/ORM |
 | **Testing (Stage 7)** | Playwright MCP E2E + pytest for Flask routes/smoke | Browser journey coverage + light server health checks |
 
 ## Interfaces / Contracts
@@ -134,14 +135,14 @@ sequenceDiagram
 | `GET` | `/book/<hotel_id>/payment` | E — Dummy Payment | Step 3 of 3; simulation banner required |
 | `GET` | `/confirmation` | F — Confirmation | Summary + confetti; CTA to results |
 
-Exact path spelling may be refined in Design Review / impl-plan; contracts above are the intended screen set.
+Exact path spelling is fixed as above for Stage 4 planning (path params preferred for Playwright and bookmarks).
 
 ### Mock catalog schema (client)
 
 ```text
 Hotel {
   id, name, location, rating, amenities[],
-  priceRange { min, max } | displayPrice,
+  priceRange { min, max },
   images[] | placeholder,
   rooms: Room[3]
 }
@@ -152,23 +153,40 @@ Room {
 
 Missing fields render as `"Not Found"` / placeholder—never throw.
 
-### Booking draft (client-only)
+### Amenity vocabulary (fixed seed list)
+
+Mock hotels/rooms and the Results multi-select filter **must use this closed vocabulary** (exact strings for consistent matching):
+
+`WiFi`, `Parking`, `Pool`, `Gym`, `Spa`, `Breakfast`, `Air Conditioning`, `Pet Friendly`
+
+Seed data may assign a subset of these per hotel/room; filter options list the full set.
+
+### Sort contract (Results A)
+
+- Control offers **Price: low→high** and **Price: high→low**.
+- Sort key: hotel `priceRange.min` (numeric). Visible feedback (toast or control highlight) on change.
+
+### Booking draft (client-only, `sessionStorage`)
+
+Storage key (illustrative): `hotelBookingDraft`.
 
 ```text
 BookingDraft {
   hotelId, roomId,
   guest { firstName, lastName, email, phone?, guestsCount },
-  referenceId?  // optional client-generated
+  referenceId?  // set on successful dummy pay, before Confirmation
 }
 ```
 
+**Reference id format:** `HB-` + compact timestamp (e.g. base36 ms) + short random suffix (e.g. 4 alphanumeric). Example shape: `HB-m1k2n3-a7xq`. Generated client-side only; no server allocation.
+
 ### UI feedback contract
 
-Primary actions emit at least one of: toast, modal, or animation within the interaction feedback budget (~200ms for local ops; brief loading allowed on simulated pay).
+Primary actions emit at least one of: toast, modal, or animation within the interaction feedback budget (~200ms for local ops; brief loading allowed on simulated pay). Confetti: small vanilla JS canvas/DOM particle helper invoked on Confirmation load when a valid draft exists.
 
 ### Playwright E2E hooks (Stage 7)
 
-Stable selectors (e.g., `data-testid` on filter controls, hotel cards, step Continue/Back, pay button, confirmation summary) so E2E can cover browse → filter/sort → details → C/D/E → F without brittle CSS-only selectors.
+Stable selectors (e.g., `data-testid` on filter controls, hotel cards, step Continue/Back, pay button, confirmation summary) so E2E can cover browse → filter/sort → details → C/D/E → F without brittle CSS-only selectors. E2E must run the booking journey in a **single tab** so `sessionStorage` draft is visible on Confirmation.
 
 ## Security & Secret Handling
 
@@ -188,19 +206,28 @@ Stable selectors (e.g., `data-testid` on filter controls, hotel cards, step Cont
 | Missing/undefined mock fields | `"Not Found"` or graceful placeholder; UI stays up |
 | Unknown `hotel_id` in URL | Dedicated not-found / back-to-results message (no crash) |
 | Booking step reached without room selected | Block Continue on C; redirect or prompt to select |
-| Client state lost (refresh mid-flow) | Graceful recovery: return to Results or Details; do not invent server-side booking recovery |
+| Client refresh mid-flow (same tab) | Restore `BookingDraft` from **`sessionStorage`**; re-render step from draft |
+| Client state missing (new tab / storage cleared / direct `/confirmation`) | Graceful empty/not-found messaging + CTA to Results; do **not** invent booking data |
 | Static asset 404 | Flask 404; keep templates free of hard dependency on optional images (use placeholders) |
 | Flask process down | Local restart; document `flask run` / README start steps for Verify |
-| Interaction slower than budget | Prefer sync in-memory filter/sort; avoid artificial delays except brief pay simulation; document console timing approach per NFR |
+| Interaction slower than budget | Prefer sync in-memory filter/sort; avoid artificial delays except brief pay simulation; document console timing (`performance.now` / README notes) per NFR |
 
 ## Open Trade-offs
 
-1. **In-memory vs `sessionStorage` for booking draft:** In-memory is simplest; storage survives refresh better for demo/Playwright. Prefer lightweight `sessionStorage` in implementation unless Design Review prefers pure memory + strict navigation.
-2. **Optional high→low price sort:** Requirements allow low→high as minimum; high→low is a non-blocking preference—include if low effort.
-3. **Amenity vocabulary:** Exact amenity strings are seed-data choices; keep a fixed enum-like list in mock for filter multi-select consistency.
-4. **Booking reference id format:** Optional; e.g., `HB-` + short random token client-side—decide in impl-plan.
-5. **Vanilla JS vs small library:** Vanilla preferred for scope; only add a library if confetti/feedback complexity justifies it in Design Review.
-6. **Multi-page full reloads vs shared shell with partial enhancement:** Full multi-page Flask routes match Jinja2 strengths; keep catalog logic in shared static JS loaded on each page.
-7. **Path style (`/hotels/<id>` vs query params):** Path params are clearer for Playwright and bookmarks; finalize in impl-plan.
+**Resolved in Design Review (Stage 3):**
 
-**Stage gate:** This document is Architecture only. No production application code in Stage 2. Proceed to Design Review only after human approval of `architecture.md`.
+1. **Booking draft storage:** **`sessionStorage`** — survives refresh in the same tab; clears when the tab closes; not `localStorage` (avoids stale cross-session drafts) and not server sessions.
+2. **Price sort directions:** Include **both** low→high and high→low; sort key = `priceRange.min`.
+3. **Confetti:** **Small vanilla JS helper** (no heavy npm/confetti dependency).
+4. **Amenity vocabulary:** Fixed closed list — `WiFi`, `Parking`, `Pool`, `Gym`, `Spa`, `Breakfast`, `Air Conditioning`, `Pet Friendly`.
+5. **Reference id:** Client-generated `HB-` + timestamp/random (see Interfaces).
+6. **Client stack:** Vanilla JS confirmed; no SPA framework.
+7. **Routing style:** Path params (`/hotels/<id>`, `/book/<hotel_id>/…`) confirmed for Playwright/bookmarks.
+
+**Non-blocking residual (impl-plan may refine UX widgets only):**
+
+- Price-range filter control shape (dual inputs vs range slider) — either is fine if filter semantics match `priceRange`.
+- Exact `data-testid` naming table — define in Stage 4/5.
+- Simulated pay loading duration (keep brief, e.g. ~300–800ms) — must not feel like a real gateway.
+
+**Stage gate:** Architecture updated by Design Review. No production application code in Stage 3. Proceed to Implementation Planning only after human acceptance of `design-review.md`.
