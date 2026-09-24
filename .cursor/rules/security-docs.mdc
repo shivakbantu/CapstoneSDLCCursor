@@ -1,0 +1,29 @@
+---
+description: No secrets in code, logs, generated docs, or PR bodies. Validate inputs; handle missing files gracefully.
+alwaysApply: true
+---
+
+# Security & Safe Documentation Output
+
+## Never commit or emit
+
+- API keys, tokens, passwords, private keys, `.env` contents
+- Personal access tokens in markdown, PR descriptions, or synced docs
+- Hardcoded credentials in source or test fixtures (use env vars / mocks)
+
+## Documentation sync / generated output
+
+- Redact secrets if source content contains them; note redaction in Known Limitations
+- Mark missing fields as `Not Found` — never invent credentials to fill gaps
+- Validate user/path inputs before reading files or calling external APIs
+
+## Error handling expectations
+
+- Missing files, empty repos, and API failures must fail gracefully with clear messages
+- Do not swallow errors without logging a safe, non-secret reason
+
+## If a secret is found in a diff or file
+
+1. Stop and warn the user
+2. Remove or redact before commit/PR
+3. Suggest rotating the credential if it may have been exposed
