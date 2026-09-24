@@ -1,0 +1,3 @@
+# CapstoneSDLCCursor
+
+Agentic SDLC workspace.
