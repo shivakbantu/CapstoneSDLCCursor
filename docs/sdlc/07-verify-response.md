@@ -30,7 +30,7 @@ Stage 7 verification for EP-1 HarborStay portal is **Go**. Playwright MCP was us
 
 ## PR
 
-pending
+https://github.com/shivakbantu/CapstoneSDLCCursor/pull/7
 
 ## Ready for Human Approval
 
