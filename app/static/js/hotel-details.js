@@ -97,10 +97,12 @@
       btn.setAttribute("data-testid", "select-room");
       btn.setAttribute("data-room-id", room.id);
       btn.addEventListener("click", function () {
+        const prior = BookingState.read();
+        const sameHotel = prior && prior.hotelId === hotel.id;
         BookingState.write({
           hotelId: hotel.id,
           roomId: room.id,
-          guest: (BookingState.read() && BookingState.read().guest) || undefined,
+          guest: sameHotel ? prior.guest : undefined,
         });
         if (window.Feedback) Feedback.toast("Room selected — continue to booking", "ok");
         window.location.href = "/book/" + encodeURIComponent(hotel.id) + "/room";

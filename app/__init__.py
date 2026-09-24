@@ -10,7 +10,7 @@ def create_app() -> Flask:
         template_folder="templates",
         static_folder="static",
     )
-    app.config["SECRET_KEY"] = "dev-only-not-a-secret"  # no auth; local UI only
+    # No Flask sessions/auth; do not set a SECRET_KEY (no secrets in source).
 
     from app.routes import bp
 
