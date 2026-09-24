@@ -11,6 +11,20 @@
   const summaryEl = document.getElementById("payment-summary");
   const payBtn = document.getElementById("pay-confirm");
   const PAY_DELAY_MS = 400;
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  /** Mirror Guest Details required-field rules before allowing Pay / Confirm. */
+  function isGuestValid(guest) {
+    if (!guest || typeof guest !== "object") return false;
+    const first = (guest.firstName || "").trim();
+    const last = (guest.lastName || "").trim();
+    const email = (guest.email || "").trim();
+    const n = guest.guestsCount;
+    if (!first || !last || !email) return false;
+    if (!EMAIL_RE.test(email)) return false;
+    if (!Number.isInteger(n) || n < 1) return false;
+    return true;
+  }
 
   function renderSummary() {
     const draft = BookingState.read();
@@ -20,6 +34,17 @@
           "<p>Missing booking draft. <a href=\"/book/" +
           encodeURIComponent(hotelId) +
           "/room\">Select a room</a> first.</p>";
+      }
+      if (payBtn) payBtn.disabled = true;
+      return;
+    }
+
+    if (!isGuestValid(draft.guest)) {
+      if (summaryEl) {
+        summaryEl.innerHTML =
+          "<p>Guest details incomplete. <a href=\"/book/" +
+          encodeURIComponent(hotelId) +
+          "/guest\">Complete guest details</a> first.</p>";
       }
       if (payBtn) payBtn.disabled = true;
       return;
@@ -53,8 +78,9 @@
 
   async function onPay() {
     const draft = BookingState.read();
-    if (!draft || !draft.roomId || !draft.guest) {
+    if (!draft || draft.hotelId !== hotelId || !draft.roomId || !isGuestValid(draft.guest)) {
       if (window.Feedback) Feedback.toast("Complete earlier steps first", "warn");
+      if (payBtn) payBtn.disabled = true;
       return;
     }
     if (payBtn) payBtn.disabled = true;

@@ -86,10 +86,8 @@
 
   function restore() {
     const draft = BookingState.read();
-    if (!draft || draft.hotelId !== hotelId) {
-      BookingState.update({ hotelId: hotelId });
-    }
-    if (!draft || !draft.roomId) {
+    // Require a draft for this hotel with a room; do not keep a stale roomId from another hotel.
+    if (!draft || draft.hotelId !== hotelId || !draft.roomId) {
       if (window.Feedback) Feedback.toast("Select a room first", "warn");
       window.location.href = "/book/" + encodeURIComponent(hotelId) + "/room";
       return;
