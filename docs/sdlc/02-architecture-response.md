@@ -31,7 +31,7 @@ Stage 2 architecture for Jira epic **EP-1 (Interactive Hotel Booking User Portal
 
 ## PR
 
-pending
+https://github.com/shivakbantu/CapstoneSDLCCursor/pull/2
 
 ## Ready for Human Approval
 
