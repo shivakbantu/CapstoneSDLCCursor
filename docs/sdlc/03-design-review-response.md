@@ -30,7 +30,7 @@ Stage 3 design review for EP-1 (Interactive Hotel Booking User Portal) is comple
 
 ## PR
 
-pending
+https://github.com/shivakbantu/CapstoneSDLCCursor/pull/3
 
 ## Ready for Human Approval
 
