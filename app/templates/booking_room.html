@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page booking-page" data-hotel-id="{{ hotel_id }}" data-step="1">
+  {% include "_booking_steps.html" %}
+  <h1>Select a room</h1>
+  <p class="lede">Choose exactly one room to continue. You can change a selection seeded from hotel details.</p>
+  <div id="booking-hotel-summary" class="booking-summary"></div>
+  <div id="room-options" class="room-options" data-testid="room-options"></div>
+  <p id="room-error" class="field-error" hidden data-testid="room-error">
+    Please select a room before continuing.
+  </p>
+  <div class="booking-nav">
+    <a class="btn btn-secondary" href="{{ url_for('pages.hotel_details', hotel_id=hotel_id) }}"
+       data-testid="btn-back">Back</a>
+    <button type="button" class="btn btn-primary" id="btn-continue" data-testid="btn-continue">
+      Continue
+    </button>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/booking-room.js') }}"></script>
+{% endblock %}

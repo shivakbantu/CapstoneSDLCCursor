@@ -1,0 +1,14 @@
+<nav class="step-indicator" aria-label="Booking steps" data-testid="booking-step-indicator">
+  <ol>
+    <li class="{% if step == 1 %}is-current{% elif step > 1 %}is-done{% endif %}">
+      <span class="step-num">1</span> Room
+    </li>
+    <li class="{% if step == 2 %}is-current{% elif step > 2 %}is-done{% endif %}">
+      <span class="step-num">2</span> Guest
+    </li>
+    <li class="{% if step == 3 %}is-current{% endif %}">
+      <span class="step-num">3</span> Payment
+    </li>
+  </ol>
+  <p class="step-caption">Step {{ step }} of 3</p>
+</nav>

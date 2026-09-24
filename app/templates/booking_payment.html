@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page booking-page" data-hotel-id="{{ hotel_id }}" data-step="3">
+  {% include "_booking_steps.html" %}
+  <h1>Dummy payment</h1>
+  <div class="sim-banner" data-testid="payment-sim-banner" role="status">
+    <strong>Simulation only.</strong> No real charge will be made. No card number is required.
+  </div>
+  <div id="payment-summary" class="booking-summary" data-testid="payment-summary"></div>
+  <div class="booking-nav">
+    <a class="btn btn-secondary" href="{{ url_for('pages.booking_guest', hotel_id=hotel_id) }}"
+       data-testid="btn-back">Back</a>
+    <button type="button" class="btn btn-primary" id="pay-confirm" data-testid="pay-confirm">
+      Pay / Confirm
+    </button>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/booking-payment.js') }}"></script>
+{% endblock %}
