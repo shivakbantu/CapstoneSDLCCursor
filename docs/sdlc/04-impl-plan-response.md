@@ -28,7 +28,7 @@ Stage 4 implementation planning for EP-1 (Interactive Hotel Booking User Portal)
 
 ## PR
 
-**pending** (parent opens Stage 4 PR via GitHub REST API)
+https://github.com/shivakbantu/CapstoneSDLCCursor/pull/4
 
 ## Ready for Human Approval
 
