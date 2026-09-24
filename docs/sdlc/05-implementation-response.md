@@ -64,7 +64,7 @@ None for Stage 5 exit. Stage PR creation deferred to parent orchestrator (per in
 
 ## PR
 
-**pending** (parent will create; do not open from this agent).
+https://github.com/shivakbantu/CapstoneSDLCCursor/pull/5
 
 ## Ready for Human Approval
 
