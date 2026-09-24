@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page confirmation-page">
+  <div id="confirmation-empty" class="empty-state" hidden data-testid="confirmation-empty">
+    <h1>No booking to show</h1>
+    <p>There is no booking draft in this browser tab. Complete a booking from results first.</p>
+    <a class="btn btn-primary" href="{{ url_for('pages.results') }}" data-testid="empty-back-to-results">
+      Back to results
+    </a>
+  </div>
+
+  <div id="confirmation-summary" class="confirmation-panel" hidden data-testid="confirmation-summary">
+    <canvas id="confetti-canvas" class="confetti-canvas" data-testid="confetti-canvas"
+            aria-hidden="true"></canvas>
+    <p class="eyebrow success-label">Booking confirmed</p>
+    <h1>You’re all set</h1>
+    <p class="reference">Reference
+      <strong id="booking-reference" data-testid="booking-reference"></strong>
+    </p>
+    <dl class="summary-dl" id="summary-fields"></dl>
+    <a class="btn btn-primary" href="{{ url_for('pages.results') }}"
+       id="btn-back-to-results" data-testid="btn-back-to-results">Back to results</a>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/confetti.js') }}"></script>
+<script src="{{ url_for('static', filename='js/confirmation.js') }}"></script>
+{% endblock %}

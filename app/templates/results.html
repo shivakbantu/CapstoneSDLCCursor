@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page results-page">
+  <header class="page-hero">
+    <p class="eyebrow">Browse stays</p>
+    <h1>Find your next hotel</h1>
+    <p class="lede">Filter by price, rating, and amenities — all from local mock data.</p>
+  </header>
+
+  <aside class="filters-panel" aria-label="Hotel filters">
+    <div class="filter-group">
+      <label for="filter-price-min">Min price ($)</label>
+      <input type="number" id="filter-price-min" data-testid="filter-price-min"
+             min="0" step="10" placeholder="0">
+    </div>
+    <div class="filter-group">
+      <label for="filter-price-max">Max price ($)</label>
+      <input type="number" id="filter-price-max" data-testid="filter-price-max"
+             min="0" step="10" placeholder="Any">
+    </div>
+    <div class="filter-group">
+      <label for="filter-rating">Min rating</label>
+      <select id="filter-rating" data-testid="filter-rating">
+        <option value="">Any</option>
+        <option value="3">3+</option>
+        <option value="3.5">3.5+</option>
+        <option value="4">4+</option>
+        <option value="4.5">4.5+</option>
+      </select>
+    </div>
+    <fieldset class="filter-group amenities-fieldset">
+      <legend>Amenities</legend>
+      <div id="amenity-filters" class="amenity-chips" data-testid="filter-amenity-group"></div>
+    </fieldset>
+    <div class="filter-actions">
+      <label for="sort-price">Sort by price</label>
+      <select id="sort-price" data-testid="sort-price">
+        <option value="asc">Low → high</option>
+        <option value="desc">High → low</option>
+      </select>
+      <button type="button" class="btn btn-secondary" id="filter-clear" data-testid="filter-clear">
+        Clear filters
+      </button>
+    </div>
+  </aside>
+
+  <div id="results-list" class="hotel-grid" data-testid="results-list"></div>
+  <div id="empty-state" class="empty-state" hidden data-testid="empty-state">
+    <h2>No hotels match</h2>
+    <p>Try widening your price range, lowering the rating, or clearing amenities.</p>
+    <button type="button" class="btn btn-primary" id="empty-clear" data-testid="empty-clear">
+      Clear filters
+    </button>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/results.js') }}"></script>
+{% endblock %}

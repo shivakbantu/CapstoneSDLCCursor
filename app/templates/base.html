@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · HarborStay</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="{{ url_for('pages.results') }}" data-testid="nav-brand">HarborStay</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="{{ url_for('pages.results') }}"
+           class="{% if active == 'results' %}is-active{% endif %}"
+           data-testid="nav-results">Hotels</a>
+        <a href="{{ url_for('pages.confirmation') }}"
+           class="{% if active == 'confirmation' %}is-active{% endif %}"
+           data-testid="nav-confirmation">Confirmation</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="site-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true" data-testid="toast-region"></div>
+  <div id="loading-overlay" class="loading-overlay" hidden data-testid="loading-overlay">
+    <div class="loading-card" role="status">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="loading-text">Processing…</p>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/catalog.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/display.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/booking-state.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

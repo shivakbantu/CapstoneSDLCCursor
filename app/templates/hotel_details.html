@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="page details-page" data-hotel-id="{{ hotel_id }}">
+  <div id="hotel-not-found" class="empty-state" hidden data-testid="hotel-not-found">
+    <h1>Hotel not found</h1>
+    <p>We could not find a hotel with id <code>{{ hotel_id }}</code> in the mock catalog.</p>
+    <a class="btn btn-primary" href="{{ url_for('pages.results') }}" data-testid="not-found-back">
+      Back to results
+    </a>
+  </div>
+
+  <article id="hotel-details" class="hotel-details" hidden data-testid="hotel-details">
+    <a class="back-link" href="{{ url_for('pages.results') }}">← All hotels</a>
+    <div class="details-hero">
+      <div class="details-image placeholder-image" id="hotel-image" aria-hidden="true"></div>
+      <div class="details-meta">
+        <h1 id="hotel-name"></h1>
+        <p class="location" id="hotel-location"></p>
+        <p class="rating" id="hotel-rating"></p>
+        <p class="price-range" id="hotel-price"></p>
+        <ul class="amenity-list" id="hotel-amenities"></ul>
+      </div>
+    </div>
+    <h2>Rooms</h2>
+    <div id="room-list" class="room-list" data-testid="room-list"></div>
+  </article>
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/hotel-details.js') }}"></script>
+{% endblock %}
