@@ -32,7 +32,7 @@ Stage 1 requirements for Jira epic **EP-1 (Interactive Hotel Booking User Portal
 
 ## PR
 
-pending
+https://github.com/shivakbantu/CapstoneSDLCCursor/pull/1
 
 ## Ready for Human Approval
 
