@@ -79,7 +79,7 @@ Reviewed (no change required for exit): `app/routes.py`, templates, `catalog.js`
 
 ## PR
 
-**pending** (parent orchestrator creates Stage 6 PR; this agent does not open PRs).
+https://github.com/shivakbantu/CapstoneSDLCCursor/pull/6
 
 ## Ready for Human Approval
 
